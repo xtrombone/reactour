@@ -43,10 +43,11 @@ export const propTypes = {
       action: PropTypes.func,
       style: PropTypes.object,
       waitSec: PropTypes.number,
+      pollInterval: PropTypes.number,
       stepInteraction: PropTypes.bool,
       preAction: PropTypes.func,
       postAction: PropTypes.func,
-      rewindAction: PropTypes.func
+      rewindAction: PropTypes.func,
     })
   ),
   update: PropTypes.string,
@@ -59,7 +60,7 @@ export const propTypes = {
   ]),
   rounded: PropTypes.number,
   accentColor: PropTypes.string,
-  deterministic: PropTypes.bool
+  deterministic: PropTypes.bool,
 }
 
 export const defaultProps = {
@@ -75,5 +76,5 @@ export const defaultProps = {
   rounded: 0,
   accentColor: '#007aff',
   closeWithMask: true,
-  deterministic: true
+  deterministic: true,
 }

@@ -80,7 +80,6 @@ class Tour extends Component {
     const { isOpen } = this.props
     clearInterval(this.watchInterval)
 
-
     if (isOpen) {
       this.close()
     }
@@ -92,7 +91,7 @@ class Tour extends Component {
   open(startAt) {
     const { onAfterOpen } = this.props
     this.setState(
-      prevState => ({
+      (prevState) => ({
         isOpen: true,
         current: startAt !== undefined ? startAt : prevState.current,
       }),
@@ -110,7 +109,7 @@ class Tour extends Component {
     window.addEventListener('keydown', this.keyDownHandler, false)
   }
 
-  unlockFocus = callback => {
+  unlockFocus = (callback) => {
     this.setState(
       {
         focusUnlocked: true,
@@ -129,90 +128,97 @@ class Tour extends Component {
     }
     const step = steps[current]
 
-    const stepCallback = o => {
+    const stepCallback = (o) => {
       if (step.action && typeof step.action === 'function') {
         this.unlockFocus(() => step.action(o))
       }
     }
 
-    let waitTimes=0
+    let waitTimes = 0
     clearInterval(this.watchInterval)
 
-    this.watchInterval = setInterval(() => {
-      const node = step.selector ? document.querySelector(step.selector) : null
+    this.watchInterval = setInterval(
+      () => {
+        const node = step.selector
+          ? document.querySelector(step.selector)
+          : null
 
-      if (!node && step.waitSec &&  waitTimes < step.waitSec) {
-        waitTimes++
-        return;
-      }
-      clearInterval(this.watchInterval)
-
-      if (step.observe) {
-        const target = document.querySelector(step.observe)
-        const config = {attributes: true, childList: true, characterData: true}
-        this.setState(
-          prevState => {
-            if (prevState.observer) {
-              setTimeout(() => {
-                prevState.observer.disconnect()
-              }, 0)
-            }
-            return {
-              observer: new MutationObserver(mutations => {
-                mutations.forEach(mutation => {
-                  if (
-                    mutation.type === 'childList' &&
-                    mutation.addedNodes.length > 0
-                  ) {
-                    const cb = () => stepCallback(mutation.addedNodes[0])
-                    setTimeout(
-                      () =>
-                        this.calculateNode(
-                          mutation.addedNodes[0],
-                          step.position,
-                          cb
-                        ),
-                      100
-                    )
-                  } else if (
-                    mutation.type === 'childList' &&
-                    mutation.removedNodes.length > 0
-                  ) {
-                    const cb = () => stepCallback(node)
-                    this.calculateNode(node, step.position, cb)
-                  }
-                })
-              }),
-            }
-          },
-          () => this.state.observer.observe(target, config)
-        )
-      } else {
-        if (this.state.observer) {
-          this.state.observer.disconnect()
-          this.setState({
-            observer: null,
-          })
+        if (!node && step.waitSec && waitTimes < step.waitSec) {
+          waitTimes++
+          return
         }
-      }
+        clearInterval(this.watchInterval)
 
-      if (node) {
-        const cb = () => stepCallback(node)
-        this.calculateNode(node, step.position, cb)
-      } else {
-        this.setState(
-          setNodeState(null, this.helper.current, step.position),
-          stepCallback
-        )
+        if (step.observe) {
+          const target = document.querySelector(step.observe)
+          const config = {
+            attributes: true,
+            childList: true,
+            characterData: true,
+          }
+          this.setState(
+            (prevState) => {
+              if (prevState.observer) {
+                setTimeout(() => {
+                  prevState.observer.disconnect()
+                }, 0)
+              }
+              return {
+                observer: new MutationObserver((mutations) => {
+                  mutations.forEach((mutation) => {
+                    if (
+                      mutation.type === 'childList' &&
+                      mutation.addedNodes.length > 0
+                    ) {
+                      const cb = () => stepCallback(mutation.addedNodes[0])
+                      setTimeout(
+                        () =>
+                          this.calculateNode(
+                            mutation.addedNodes[0],
+                            step.position,
+                            cb
+                          ),
+                        100
+                      )
+                    } else if (
+                      mutation.type === 'childList' &&
+                      mutation.removedNodes.length > 0
+                    ) {
+                      const cb = () => stepCallback(node)
+                      this.calculateNode(node, step.position, cb)
+                    }
+                  })
+                }),
+              }
+            },
+            () => this.state.observer.observe(target, config)
+          )
+        } else {
+          if (this.state.observer) {
+            this.state.observer.disconnect()
+            this.setState({
+              observer: null,
+            })
+          }
+        }
 
-        step.selector &&
-        console.warn(
-          `Doesn't find a DOM node '${
-            step.selector
-            }'. Please check the 'steps' Tour prop Array at position ${current}.`
-        )
-      }
-    }, step.waitSec ? 20: 0)
+        if (node) {
+          const cb = () => stepCallback(node)
+          this.calculateNode(node, step.position, cb)
+        } else {
+          this.setState(
+            setNodeState(null, this.helper.current, step.position),
+            stepCallback
+          )
+
+          step.selector &&
+            console.warn(
+              `Doesn't find a DOM node '${step.selector}'. Please check the 'steps' Tour prop Array at position ${current}.`
+            )
+        }
+      },
+      step.waitSec ? step.pollInterval || 20 : 0
+    )
   }
 
   calculateNode = (node, stepPosition, cb) => {
@@ -232,7 +238,7 @@ class Tour extends Component {
         context: hx.isBody(parentScroll) ? window : parentScroll,
         duration: scrollDuration,
         offset: scrollOffset || -(h / 2),
-        callback: nd => {
+        callback: (nd) => {
           this.setState(setNodeState(nd, this.helper.current, stepPosition), cb)
         },
       })
@@ -243,11 +249,11 @@ class Tour extends Component {
 
   attemptExecution(handler, ...params) {
     // yay for rest parameters and spreading
-    if(handler && handler instanceof Function) return handler(...params)
+    if (handler && handler instanceof Function) return handler(...params)
   }
 
   close() {
-    this.setState(prevState => {
+    this.setState((prevState) => {
       if (prevState.observer) {
         prevState.observer.disconnect()
       }
@@ -267,7 +273,7 @@ class Tour extends Component {
     }
   }
 
-  maskClickHandler = e => {
+  maskClickHandler = (e) => {
     const { closeWithMask, onRequestClose } = this.props
     if (
       closeWithMask &&
@@ -279,7 +285,7 @@ class Tour extends Component {
 
   nextStep = () => {
     const { steps, getCurrentStep } = this.props
-    this.setState(prevState => {
+    this.setState((prevState) => {
       const nextStep =
         prevState.current < steps.length - 1
           ? prevState.current + 1
@@ -289,11 +295,13 @@ class Tour extends Component {
         getCurrentStep(nextStep)
       }
 
-      if(prevState.current !== nextStep) {
-        const currentNode = document.querySelector(steps[prevState.current].selector) || undefined
+      if (prevState.current !== nextStep) {
+        const currentNode =
+          document.querySelector(steps[prevState.current].selector) || undefined
         this.attemptExecution(steps[prevState.current].postAction, currentNode)
 
-        const nextNode = document.querySelector(steps[nextStep].selector) || undefined
+        const nextNode =
+          document.querySelector(steps[nextStep].selector) || undefined
         this.attemptExecution(steps[nextStep].preAction, nextNode)
       }
 
@@ -305,12 +313,13 @@ class Tour extends Component {
 
   prevStep = () => {
     const { steps, getCurrentStep } = this.props
-    this.setState(prevState => {
+    this.setState((prevState) => {
       const nextStep =
         prevState.current > 0 ? prevState.current - 1 : prevState.current
 
-      if(prevState.current !== nextStep) {
-        const nextNode = document.querySelector(steps[nextStep].selector) || undefined
+      if (prevState.current !== nextStep) {
+        const nextNode =
+          document.querySelector(steps[nextStep].selector) || undefined
         this.attemptExecution(steps[nextStep].rewindAction, nextNode)
       }
 
@@ -324,36 +333,41 @@ class Tour extends Component {
     }, this.showStep)
   }
 
-  gotoStep = n => {
+  gotoStep = (n) => {
     const { steps, getCurrentStep } = this.props
-    const startingStep = this.state.current;
+    const startingStep = this.state.current
 
-    this.setState(prevState => {
+    this.setState((prevState) => {
       const nextStep = steps[n] ? n : prevState.current
 
       if (nextStep !== startingStep && this.props.deterministic) {
-        const startingNode = document.querySelector(steps[startingStep].selector) || undefined
+        const startingNode =
+          document.querySelector(steps[startingStep].selector) || undefined
 
         if (nextStep > startingStep) {
           // the next step is somewhere in the future list of steps
           this.attemptExecution(steps[startingStep].postAction, startingNode)
 
           steps.slice(startingStep, nextStep).forEach((interimStep) => {
-            const node = document.querySelector(interimStep.selector) || undefined
+            const node =
+              document.querySelector(interimStep.selector) || undefined
 
             this.attemptExecution(interimStep.preAction, node)
             this.attemptExecution(interimStep.action, node)
             this.attemptExecution(interimStep.postAction, node)
           })
-
         } else if (nextStep < startingStep) {
           // the next step is somewhere in the past list of steps
           this.attemptExecution(startingStep.rewindAction, startingNode)
 
-          steps.slice(nextStep, startingStep).reverse().forEach((interimStep) => {
-            const node = document.querySelector(interimStep.selector) || undefined
-            this.attemptExecution(interimStep.rewindAction, node)
-          })
+          steps
+            .slice(nextStep, startingStep)
+            .reverse()
+            .forEach((interimStep) => {
+              const node =
+                document.querySelector(interimStep.selector) || undefined
+              this.attemptExecution(interimStep.rewindAction, node)
+            })
         }
       }
 
@@ -367,7 +381,7 @@ class Tour extends Component {
     }, this.showStep)
   }
 
-  keyDownHandler = e => {
+  keyDownHandler = (e) => {
     const {
       onRequestClose,
       nextStep,
@@ -465,7 +479,7 @@ class Tour extends Component {
               [CN.mask.isOpen]: isOpen,
             })}
             onClick={this.maskClickHandler}
-            forwardRef={c => (this.mask = c)}
+            forwardRef={(c) => (this.mask = c)}
             windowWidth={windowWidth}
             windowHeight={windowHeight}
             targetWidth={targetWidth}
@@ -480,9 +494,7 @@ class Tour extends Component {
                 ? !steps[current].stepInteraction
                 : disableInteraction
             }
-            disableInteractionClassName={`${
-              CN.mask.disableInteraction
-            } ${highlightedMaskClassName}`}
+            disableInteractionClassName={`${CN.mask.disableInteraction} ${highlightedMaskClassName}`}
           />
           <FocusLock disabled={focusUnlocked}>
             <Guide
@@ -590,8 +602,8 @@ class Tour extends Component {
                                 ? onRequestClose
                                 : () => {}
                               : typeof nextStep === 'function'
-                                ? () => nextStep(this.nextStep.bind(this))
-                                : this.nextStep
+                              ? () => nextStep(this.nextStep.bind(this))
+                              : this.nextStep
                           }
                           disabled={
                             !lastStepNextButton && current === steps.length - 1
